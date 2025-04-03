@@ -3,6 +3,7 @@ pragma solidity 0.8.26;
 
 contract Slot {
     mapping(address => uint256) public bal; // slot 0
+
     mapping(address user => mapping(address token => uint)) public tokenBal; //slot 1
 
     function updateBal(
@@ -69,22 +70,38 @@ contract Slot {
     }
 
     function getStorageSlot(
-        address _key1,
-        uint256 _key2
-    ) external pure returns (bytes32 slot) {
+        address key1,
+        uint256 key2
+    ) external pure returns (uint256 slot) {
         uint256 mappingSlot;
 
         assembly {
             mappingSlot := balance.slot
         }
 
-        bytes32 initialHash = keccak256(abi.encode(_key1, mappingSlot));
-        slot = keccak256(abi.encode(_key2, initialHash));
+        bytes32 initialHash = keccak256(abi.encode(key1, mappingSlot));
+        slot = uint256(keccak256(abi.encode(key2, initialHash))); // was inittially byte32
     }
 
     function getSlotValue(bytes32 _slot) external view returns (uint256 value) {
         assembly {
             value := sload(_slot)
+        }
+    }
+}
+
+contract DynamicArray {
+    uint256 private someNumber; // storage slot 0
+    address private someAddress; // storage slot 1
+    uint256[] private myArr = [3, 4, 5, 9, 7]; // storage slot 2
+
+    function getSlotValueInDynamicArray(
+        uint256 _index
+    ) public view returns (uint256 value, uint256 slot) {
+        slot = uint256(keccak256(abi.encode(2))) + _index;
+
+        assembly {
+            value := sload(slot)
         }
     }
 }

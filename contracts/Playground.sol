@@ -105,3 +105,47 @@ contract DynamicArray {
         }
     }
 }
+
+// when elements don’t use up a storage slot space
+contract DynArray {
+    uint256 private someNumber; // storage slot 0
+    address private someAddress; // storage slot 1
+    uint32[] private myArr = [3, 4, 5, 9, 7]; // storage slot 2
+
+    function getSlotValue(
+        uint256 _index
+    ) public view returns (bytes32 value, uint256 slot) {
+        slot = uint256(keccak256(abi.encode(2))) + _index;
+        assembly {
+            value := sload(slot)
+        }
+    }
+}
+
+contract NestedArray {
+    uint256 private someNumber; // storage slot 0
+
+    // Initialize nested array
+    uint256[][] private a = [[2, 9, 6, 3], [7, 4, 8, 10]]; // storage slot 1
+
+    function getSlot(
+        uint256 baseSlot,
+        uint256 _index1,
+        uint256 _index2
+    ) public pure returns (uint256 _finalSlot) {
+        // keccak256(baseSlot) + _index1
+        uint256 _initialSlot = uint256(keccak256(abi.encode(baseSlot))) +
+            _index1;
+
+        // keccak256(_initialSlot) + _index2
+        _finalSlot = uint256(
+            uint256(keccak256(abi.encode(_initialSlot))) + _index2
+        );
+    }
+
+    function getSlotValue(uint256 _slot) public view returns (uint256 value) {
+        assembly {
+            value := sload(_slot)
+        }
+    }
+}
